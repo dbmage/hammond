@@ -20,12 +20,12 @@ func main() {
 	var err error
 	db.DB, err = db.Init()
 	if err != nil {
-		fmt.Println("status: ", err)
-	} else {
-		db.Migrate()
+		log.Fatal("unable to initialise the database", err)
 	}
-	r := gin.Default()
 
+	db.Migrate()
+
+	r := gin.Default()
 	r.Use(setupSettings())
 	r.Use(gin.Recovery())
 	r.Use(location.Default())
@@ -56,9 +56,12 @@ func main() {
 	go assetEnv()
 	go intiCron()
 
-	r.Run(":3000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-
+	err = r.Run(":3000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err != nil {
+		log.Fatal("unable to start the server", err)
+	}
 }
+
 func setupSettings() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -72,8 +75,11 @@ func setupSettings() gin.HandlerFunc {
 
 func intiCron() {
 
-	//gocron.Every(uint64(checkFrequency)).Minutes().Do(service.DownloadMissingEpisodes)
-	gocron.Every(2).Days().Do(service.CreateBackup)
+	err := gocron.Every(2).Days().Do(service.CreateBackup)
+	if err != nil {
+		fmt.Println("failed to setup cron job", err)
+	}
+
 	<-gocron.Start()
 }
 

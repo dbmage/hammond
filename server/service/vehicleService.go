@@ -47,6 +47,7 @@ func GetVehicleOwner(vehicleId string) (string, error) {
 func GetVehicleUsers(vehicleId string) (*[]db.UserVehicle, error) {
 	return db.GetVehicleUsers(vehicleId)
 }
+
 func CanDeleteVehicle(vehicleId, userId string) (bool, error) {
 	owner, err := db.GetVehicleOwner(vehicleId)
 	if err != nil {
@@ -56,25 +57,33 @@ func CanDeleteVehicle(vehicleId, userId string) (bool, error) {
 }
 
 func DeleteVehicle(vehicleId string) error {
-	db.DeleteExpenseByVehicleId(vehicleId)
-	db.DeleteFillupByVehicleId(vehicleId)
+	err := db.DeleteExpenseByVehicleId(vehicleId)
+	if err != nil {
+		return err
+	}
+	err = db.DeleteFillupByVehicleId(vehicleId)
+	if err != nil {
+		return err
+	}
 	return db.DeleteVehicleById(vehicleId)
 }
 
 func ShareVehicle(vehicleId, userId string) error {
 	return db.ShareVehicle(vehicleId, userId)
 }
+
 func TransferVehicle(vehicleId, ownerId, newUserID string) error {
 	vehicleOwnerId, err := GetVehicleOwner(vehicleId)
 	if err != nil {
 		return err
 	}
 	if vehicleOwnerId != ownerId {
-		return fmt.Errorf("Only vehicle owner can transfer the vehicle")
+		return fmt.Errorf("only vehicle owner can transfer the vehicle")
 	}
 
 	return db.TransferVehicle(vehicleId, ownerId, newUserID)
 }
+
 func UnshareVehicle(vehicleId, userId string) error {
 	return db.UnshareVehicle(vehicleId, userId)
 }
@@ -82,18 +91,23 @@ func UnshareVehicle(vehicleId, userId string) error {
 func GetVehicleById(vehicleID string) (*db.Vehicle, error) {
 	return db.GetVehicleById(vehicleID)
 }
+
 func GetFillupsByVehicleId(vehicleId string) (*[]db.Fillup, error) {
 	return db.GetFillupsByVehicleId(vehicleId)
 }
+
 func GetExpensesByVehicleId(vehicleId string) (*[]db.Expense, error) {
 	return db.GetExpensesByVehicleId(vehicleId)
 }
+
 func GetFillupById(fillupId string) (*db.Fillup, error) {
 	return db.GetFillupById(fillupId)
 }
+
 func GetExpenseById(expenseId string) (*db.Expense, error) {
 	return db.GetExpenseById(expenseId)
 }
+
 func UpdateVehicle(vehicleID string, model models.UpdateVehicleRequest) error {
 	toUpdate, err := GetVehicleById(vehicleID)
 	if err != nil {
@@ -113,6 +127,7 @@ func UpdateVehicle(vehicleID string, model models.UpdateVehicleRequest) error {
 
 	return db.DB.Omit(clause.Associations).Save(toUpdate).Error
 }
+
 func GetAllVehicles() (*[]db.Vehicle, error) {
 	return db.GetAllVehicles("")
 }
@@ -225,6 +240,7 @@ func UpdateExpense(fillupId string, model models.UpdateExpenseRequest) error {
 func DeleteFillupById(fillupId string) error {
 	return db.DeleteFillupById(fillupId)
 }
+
 func DeleteExpenseById(expenseId string) error {
 	return db.DeleteExpenseById(expenseId)
 }
@@ -237,10 +253,12 @@ func CreateVehicleAttachment(vehicleId, attachmentId, title string) error {
 	}
 	return db.DB.Create(model).Error
 }
+
 func GetVehicleAttachments(vehicleId string) (*[]db.Attachment, error) {
 
 	return db.GetVehicleAttachments(vehicleId)
 }
+
 func GetDistinctFuelSubtypesForVehicle(vehicleId string) ([]string, error) {
 	var names []string
 	tx := db.DB.Model(&db.Fillup{}).Where("vehicle_id=? and fuel_sub_type is not null", vehicleId).Distinct().Pluck("fuel_sub_type", &names)

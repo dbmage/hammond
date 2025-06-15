@@ -15,7 +15,7 @@ func DrivvoParseExpenses(content []byte, user *db.User, vehicle *db.Vehicle) ([]
 	expenseReader := csv.NewReader(bytes.NewReader(content))
 	expenseReader.Comment = '#'
 	// Read headers (there is a trailing comma at the end, that's why we have to read the first line)
-	expenseReader.Read()
+	_, _ = expenseReader.Read()
 	expenseReader.FieldsPerRecord = 6
 	expenseRecords, err := expenseReader.ReadAll()
 

@@ -26,6 +26,7 @@ func allUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 
 }
+
 func enableUser(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
@@ -40,6 +41,7 @@ func enableUser(c *gin.Context) {
 	}
 
 }
+
 func disableUser(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {

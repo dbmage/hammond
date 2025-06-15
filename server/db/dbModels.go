@@ -32,9 +32,11 @@ func (b *User) MarshalJSON() ([]byte, error) {
 		DistanceUnitDetail: b.DistanceUnitDetail(),
 	})
 }
+
 func (v *User) RoleDetail() EnumDetail {
 	return RoleDetails[v.Role]
 }
+
 func (v *User) DistanceUnitDetail() EnumDetail {
 	return DistanceUnitDetails[v.DistanceUnit]
 }
@@ -85,6 +87,7 @@ func (b *Vehicle) MarshalJSON() ([]byte, error) {
 		FuelUnitDetail: b.FuelUnitDetail(),
 	})
 }
+
 func (v *Vehicle) FuelTypeDetail() EnumDetail {
 	return FuelTypeDetails[v.FuelType]
 }
@@ -126,6 +129,7 @@ type Fillup struct {
 func (v *Fillup) FuelUnitDetail() EnumDetail {
 	return FuelUnitDetails[v.FuelUnit]
 }
+
 func (b *Fillup) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Fillup

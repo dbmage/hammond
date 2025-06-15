@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -49,18 +48,23 @@ func CreateQuickEntry(model models.CreateQuickEntryModel, attachmentId, userId s
 	}
 	return toCreate, nil
 }
+
 func GetAllQuickEntries(sorting string) (*[]db.QuickEntry, error) {
 	return db.GetAllQuickEntries(sorting)
 }
+
 func GetQuickEntriesForUser(userId, sorting string) (*[]db.QuickEntry, error) {
 	return db.GetQuickEntriesForUser(userId, sorting)
 }
+
 func GetQuickEntryById(id string) (*db.QuickEntry, error) {
 	return db.GetQuickEntryById(id)
 }
+
 func DeleteQuickEntryById(id string) error {
 	return db.DeleteQuickEntryById(id)
 }
+
 func SetQuickEntryAsProcessed(id string) error {
 	return db.SetQuickEntryAsProcessed(id, time.Now())
 
@@ -102,8 +106,12 @@ func deleteOldBackup() {
 
 	toDelete := files[5:]
 	for _, file := range toDelete {
-		fmt.Println(file)
-		DeleteFile(file)
+		err = DeleteFile(file)
+		if err != nil {
+			fmt.Printf("Error deleting backup file: %s\n", err)
+			continue
+		}
+		fmt.Printf("Deleted backup file: %s\n", file)
 	}
 }
 
@@ -111,6 +119,7 @@ func GetFilePath(originalName string) string {
 	dataPath := os.Getenv("DATA")
 	return path.Join(dataPath, getFileName(originalName))
 }
+
 func getFileName(orig string) string {
 
 	ext := filepath.Ext(orig)
@@ -128,7 +137,9 @@ func CreateBackup() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	dbPath := path.Join(configPath, "hammond.db")
 	_, err = os.Stat(dbPath)
@@ -136,10 +147,14 @@ func CreateBackup() (string, error) {
 		return "", fmt.Errorf("could not find db file '%s', got error '%s'", dbPath, err.Error())
 	}
 	gzipWriter := gzip.NewWriter(file)
-	defer gzipWriter.Close()
+	defer func() {
+		_ = gzipWriter.Close()
+	}()
 
 	tarWriter := tar.NewWriter(gzipWriter)
-	defer tarWriter.Close()
+	defer func() {
+		_ = tarWriter.Close()
+	}()
 
 	err = addFileToTarWriter(dbPath, tarWriter)
 	if err == nil {
@@ -153,7 +168,9 @@ func addFileToTarWriter(filePath string, tarWriter *tar.Writer) error {
 	if err != nil {
 		return fmt.Errorf("could not open file '%s', got error '%s'", filePath, err.Error())
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	stat, err := file.Stat()
 	if err != nil {
@@ -179,32 +196,34 @@ func addFileToTarWriter(filePath string, tarWriter *tar.Writer) error {
 
 	return nil
 }
-func httpClient() *http.Client {
-	client := http.Client{
-		CheckRedirect: func(r *http.Request, via []*http.Request) error {
-			//	r.URL.Opaque = r.URL.Path
-			return nil
-		},
-	}
 
-	return &client
-}
+// func httpClient() *http.Client {
+// 	client := http.Client{
+// 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+// 			//	r.URL.Opaque = r.URL.Path
+// 			return nil
+// 		},
+// 	}
+
+// 	return &client
+// }
 
 func createFolder(folder string, parent string) string {
 	folder = cleanFileName(folder)
 	//str := stringy.New(folder)
 	folderPath := path.Join(parent, folder)
 	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
-		os.MkdirAll(folderPath, 0777)
+		_ = os.MkdirAll(folderPath, 0777)
 		changeOwnership(folderPath)
 	}
 	return folderPath
 }
 
-func createDataFolderIfNotExists(folder string) string {
-	dataPath := os.Getenv("DATA")
-	return createFolder(folder, dataPath)
-}
+// func createDataFolderIfNotExists(folder string) string {
+// 	dataPath := os.Getenv("DATA")
+// 	return createFolder(folder, dataPath)
+// }
+
 func createConfigFolderIfNotExists(folder string) string {
 	dataPath := os.Getenv("CONFIG")
 	return createFolder(folder, dataPath)
@@ -213,16 +232,18 @@ func createConfigFolderIfNotExists(folder string) string {
 func cleanFileName(original string) string {
 	return sanitize.Name(original)
 }
+
 func changeOwnership(path string) {
 	uid, err1 := strconv.Atoi(os.Getenv("PUID"))
 	gid, err2 := strconv.Atoi(os.Getenv("PGID"))
 	fmt.Println(path)
 	if err1 == nil && err2 == nil {
 		fmt.Println(path + " : Attempting change")
-		os.Chown(path, uid, gid)
+		_ = os.Chown(path, uid, gid)
 	}
 
 }
+
 func DeleteFile(filePath string) error {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return err
@@ -232,8 +253,9 @@ func DeleteFile(filePath string) error {
 	}
 	return nil
 }
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+
+// func checkError(err error) {
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }

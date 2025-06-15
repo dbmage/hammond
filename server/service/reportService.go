@@ -43,42 +43,39 @@ func GetMileageByVehicleId(vehicleId string, since time.Time, mileageOption stri
 		}
 
 		if currentFillup.IsTankFull != nil && *currentFillup.IsTankFull && (currentFillup.HasMissedFillup == nil || !(*currentFillup.HasMissedFillup)) {
-			currentOdoReading := float32(currentFillup.OdoReading);
-			lastFillupOdoReading := float32(lastFillup.OdoReading);
-			currentFuelQuantity := float32(currentFillup.FuelQuantity);
-			// If miles per gallon option and distanceUnit is km, convert from km to miles 
+			currentOdoReading := float32(currentFillup.OdoReading)
+			lastFillupOdoReading := float32(lastFillup.OdoReading)
+			currentFuelQuantity := float32(currentFillup.FuelQuantity)
+			// If miles per gallon option and distanceUnit is km, convert from km to miles
 			// 	then check if fuel unit is litres. If it is, convert to gallons
-			if (mileageOption == "mpg" && mileage.DistanceUnit == db.KILOMETERS) {
-				currentOdoReading = common.KmToMiles(currentOdoReading);
-				lastFillupOdoReading = common.KmToMiles(lastFillupOdoReading);
-				if (mileage.FuelUnit == db.LITRE) {
-					currentFuelQuantity = common.LitreToGallon(currentFuelQuantity);
+			if mileageOption == "mpg" && mileage.DistanceUnit == db.KILOMETERS {
+				currentOdoReading = common.KmToMiles(currentOdoReading)
+				lastFillupOdoReading = common.KmToMiles(lastFillupOdoReading)
+				if mileage.FuelUnit == db.LITRE {
+					currentFuelQuantity = common.LitreToGallon(currentFuelQuantity)
 				}
 			}
 
-			// If km_litre option or litre per 100km and distanceUnit is miles, convert from miles to km 
+			// If km_litre option or litre per 100km and distanceUnit is miles, convert from miles to km
 			// 	then check if fuel unit is not litres. If it isn't, convert to litres
 
-			if ((mileageOption == "km_litre" || mileageOption == "litre_100km") && mileage.DistanceUnit == db.MILES) {
-				currentOdoReading = common.MilesToKm(currentOdoReading);
-				lastFillupOdoReading = common.MilesToKm(lastFillupOdoReading);
+			if (mileageOption == "km_litre" || mileageOption == "litre_100km") && mileage.DistanceUnit == db.MILES {
+				currentOdoReading = common.MilesToKm(currentOdoReading)
+				lastFillupOdoReading = common.MilesToKm(lastFillupOdoReading)
 
-				if (mileage.FuelUnit == db.US_GALLON) {
-					currentFuelQuantity = common.GallonToLitre(currentFuelQuantity);
+				if mileage.FuelUnit == db.US_GALLON {
+					currentFuelQuantity = common.GallonToLitre(currentFuelQuantity)
 				}
-			} 
-
-			
-
-
-			distance := float32(currentOdoReading - lastFillupOdoReading);
-			if (mileageOption == "litre_100km") {
-				mileage.Mileage = currentFuelQuantity / distance * 100;
-			} else {
-				mileage.Mileage = distance / currentFuelQuantity;
 			}
 
-			mileage.CostPerMile = distance / currentFillup.TotalAmount;
+			distance := float32(currentOdoReading - lastFillupOdoReading)
+			if mileageOption == "litre_100km" {
+				mileage.Mileage = currentFuelQuantity / distance * 100
+			} else {
+				mileage.Mileage = distance / currentFuelQuantity
+			}
+
+			mileage.CostPerMile = distance / currentFillup.TotalAmount
 
 		}
 

@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.20.6
+ARG GO_VERSION=1.24.4
 FROM golang:${GO_VERSION}-alpine AS builder
 RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
 RUN mkdir -p /api
@@ -9,7 +9,7 @@ RUN go mod download
 COPY ./server .
 RUN go build -o ./app ./main.go
 
-FROM node:16-alpine as build-stage
+FROM node:16-alpine AS build-stage
 WORKDIR /app
 COPY ./ui/package*.json ./
 RUN apk add --no-cache autoconf automake build-base nasm libc6-compat python3 py3-pip make g++ libpng-dev zlib-dev pngquant
@@ -35,7 +35,7 @@ RUN chmod 777 /config; \
     chmod 777 /assets
 WORKDIR /api
 COPY --from=builder /api/app .
-#COPY dist ./dist
+# COPY dist ./dist
 COPY --from=build-stage /app/dist ./dist
 EXPOSE 3000
 ENTRYPOINT ["./app"]

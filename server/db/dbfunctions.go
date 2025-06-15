@@ -23,21 +23,25 @@ func CreateUser(user *User) error {
 	tx := DB.Create(&user)
 	return tx.Error
 }
+
 func UpdateUser(user *User) error {
 	tx := DB.Omit(clause.Associations).Save(&user)
 	return tx.Error
 }
+
 func FindOneUser(condition interface{}) (User, error) {
 
 	var model User
 	err := DB.Where(condition).First(&model).Error
 	return model, err
 }
+
 func SetDisabledStatusForUser(userId string, isDisabled bool) error {
 	//Cannot do this for admin
 	tx := DB.Debug().Model(&User{}).Where("id= ? and role=?", userId, USER).Update("is_disabled", isDisabled)
 	return tx.Error
 }
+
 func GetAllUsers() (*[]User, error) {
 
 	sorting := "created_at desc"
@@ -97,6 +101,7 @@ func ShareVehicle(vehicleId, userId string) error {
 	}
 	return nil
 }
+
 func TransferVehicle(vehicleId, ownerId, newUserID string) error {
 
 	tx := DB.Model(&UserVehicle{}).Where("vehicle_id = ? AND user_id = ?", vehicleId, ownerId).Update("is_owner", false)
@@ -139,16 +144,19 @@ func GetUserVehicles(id string) (*[]Vehicle, error) {
 	}
 	return &toReturn, nil
 }
+
 func GetUserById(id string) (*User, error) {
 	var data User
 	result := DB.Preload(clause.Associations).First(&data, "id=?", id)
 	return &data, result.Error
 }
+
 func GetVehicleById(id string) (*Vehicle, error) {
 	var vehicle Vehicle
 	result := DB.Preload(clause.Associations).First(&vehicle, "id=?", id)
 	return &vehicle, result.Error
 }
+
 func GetFillupById(id string) (*Fillup, error) {
 	var obj Fillup
 	result := DB.Preload(clause.Associations).First(&obj, "id=?", id)
@@ -160,16 +168,19 @@ func GetFillupsByVehicleId(id string) (*[]Fillup, error) {
 	result := DB.Preload(clause.Associations).Order("date desc").Find(&obj, &Fillup{VehicleID: id})
 	return &obj, result.Error
 }
+
 func GetLatestFillupsByVehicleId(id string) (*Fillup, error) {
 	var obj Fillup
 	result := DB.Preload(clause.Associations).Order("date desc").First(&obj, &Fillup{VehicleID: id})
 	return &obj, result.Error
 }
+
 func GetFillupsByVehicleIdSince(id string, since time.Time) (*[]Fillup, error) {
 	var obj []Fillup
 	result := DB.Where("date >= ? AND vehicle_id = ?", since, id).Preload(clause.Associations).Order("date desc").Find(&obj)
 	return &obj, result.Error
 }
+
 func FindFillups(condition interface{}) (*[]Fillup, error) {
 
 	var model []Fillup
@@ -183,6 +194,7 @@ func FindFillupsForDateRange(vehicleIds []string, start, end time.Time) (*[]Fill
 	err := DB.Where("date <= ? AND date >= ? AND vehicle_id in ?", end, start, vehicleIds).Find(&model).Error
 	return &model, err
 }
+
 func FindExpensesForDateRange(vehicleIds []string, start, end time.Time) (*[]Expense, error) {
 
 	var model []Expense
@@ -195,11 +207,13 @@ func GetExpensesByVehicleId(id string) (*[]Expense, error) {
 	result := DB.Preload(clause.Associations).Order("date desc").Find(&obj, &Expense{VehicleID: id})
 	return &obj, result.Error
 }
+
 func GetLatestExpenseByVehicleId(id string) (*Expense, error) {
 	var obj Expense
 	result := DB.Preload(clause.Associations).Order("date desc").First(&obj, &Expense{VehicleID: id})
 	return &obj, result.Error
 }
+
 func GetExpenseById(id string) (*Expense, error) {
 	var obj Expense
 	result := DB.Preload(clause.Associations).First(&obj, "id=?", id)
@@ -211,11 +225,13 @@ func DeleteVehicleById(id string) error {
 	result := DB.Where("id=?", id).Delete(&Vehicle{})
 	return result.Error
 }
+
 func DeleteFillupById(id string) error {
 
 	result := DB.Where("id=?", id).Delete(&Fillup{})
 	return result.Error
 }
+
 func DeleteExpenseById(id string) error {
 	result := DB.Where("id=?", id).Delete(&Expense{})
 	return result.Error
@@ -226,6 +242,7 @@ func DeleteFillupByVehicleId(id string) error {
 	result := DB.Where("vehicle_id=?", id).Delete(&Fillup{})
 	return result.Error
 }
+
 func DeleteExpenseByVehicleId(id string) error {
 	result := DB.Where("vehicle_id=?", id).Delete(&Expense{})
 	return result.Error
@@ -239,6 +256,7 @@ func GetAllQuickEntries(sorting string) (*[]QuickEntry, error) {
 	result := DB.Preload(clause.Associations).Order(sorting).Find(&quickEntries)
 	return &quickEntries, result.Error
 }
+
 func GetQuickEntriesForUser(userId, sorting string) (*[]QuickEntry, error) {
 	if sorting == "" {
 		sorting = "created_at desc"
@@ -247,18 +265,22 @@ func GetQuickEntriesForUser(userId, sorting string) (*[]QuickEntry, error) {
 	result := DB.Preload(clause.Associations).Where("user_id = ?", userId).Order(sorting).Find(&quickEntries)
 	return &quickEntries, result.Error
 }
+
 func GetQuickEntryById(id string) (*QuickEntry, error) {
 	var quickEntry QuickEntry
 	result := DB.Preload(clause.Associations).First(&quickEntry, "id=?", id)
 	return &quickEntry, result.Error
 }
+
 func DeleteQuickEntryById(id string) error {
 	result := DB.Where("id=?", id).Delete(&QuickEntry{})
 	return result.Error
 }
+
 func UpdateQuickEntry(entry *QuickEntry) error {
 	return DB.Save(entry).Error
 }
+
 func SetQuickEntryAsProcessed(id string, processDate time.Time) error {
 	result := DB.Model(QuickEntry{}).Where("id=?", id).Update("process_date", processDate)
 	return result.Error
@@ -269,6 +291,7 @@ func GetAttachmentById(id string) (*Attachment, error) {
 	result := DB.Preload(clause.Associations).First(&entry, "id=?", id)
 	return &entry, result.Error
 }
+
 func GetVehicleAttachments(vehicleId string) (*[]Attachment, error) {
 	var attachments []Attachment
 	vehicle, err := GetVehicleById(vehicleId)
@@ -281,11 +304,13 @@ func GetVehicleAttachments(vehicleId string) (*[]Attachment, error) {
 	}
 	return &attachments, nil
 }
+
 func GeAlertById(id string) (*VehicleAlert, error) {
 	var alert VehicleAlert
 	result := DB.Preload(clause.Associations).First(&alert, "id=?", id)
 	return &alert, result.Error
 }
+
 func GetAlertOccurenceByAlertId(id string) (*[]AlertOccurance, error) {
 	var alertOccurance []AlertOccurance
 	result := DB.Preload(clause.Associations).Order("created_at desc").Find(&alertOccurance, "vehicle_alert_id=?", id)
@@ -297,6 +322,7 @@ func GetUnprocessedAlertOccurances() (*[]AlertOccurance, error) {
 	result := DB.Preload(clause.Associations).Order("created_at desc").Find(&alertOccurance, "process_date is NULL")
 	return &alertOccurance, result.Error
 }
+
 func MarkAlertOccuranceAsProcessed(id string, alertProcessType AlertType, date time.Time) error {
 	tx := DB.Debug().Model(&AlertOccurance{}).Where("id= ?", id).
 		Update("alert_process_type", alertProcessType).
@@ -309,6 +335,7 @@ func UpdateSettings(setting *Setting) error {
 	tx := DB.Save(&setting)
 	return tx.Error
 }
+
 func GetOrCreateSetting() *Setting {
 	var setting Setting
 	result := DB.First(&setting)
@@ -329,6 +356,7 @@ func GetLock(name string) *JobLock {
 	}
 	return &jobLock
 }
+
 func Lock(name string, duration int) {
 	jobLock := GetLock(name)
 	if jobLock == nil {
@@ -344,6 +372,7 @@ func Lock(name string, duration int) {
 		DB.Save(&jobLock)
 	}
 }
+
 func Unlock(name string) {
 	jobLock := GetLock(name)
 	if jobLock == nil {
@@ -362,7 +391,7 @@ func UnlockMissedJobs() {
 		return
 	}
 	for _, job := range jobLocks {
-		if (job.Date == time.Time{}) {
+		if (job.Date.Equal(time.Time{})) {
 			continue
 		}
 		var duration = time.Duration(job.Duration)

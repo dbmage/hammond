@@ -102,7 +102,7 @@ func (m *VehicleStatsModel) SetStats(fillups *[]db.Fillup, expenses *[]db.Expens
 		currencyMap[v.Currency] = 1
 	}
 	var toReturn []VehicleStatsModel
-	for currency, _ := range currencyMap {
+	for currency := range currencyMap {
 		model := VehicleStatsModel{}
 		var totalExpenditure, fillupTotal, expenseTotal, totalFuel, averageFuelCost, averageFuelQty, averageFillup, averageExpense float32
 		var countFillup, countExpense int

@@ -140,7 +140,7 @@ func MigrateClarkson(connectionString string) (bool, error) {
 			Name:         v.Username,
 			DateFormat:   "MM/dd/yyyy",
 		}
-		user.SetPassword("hammond")
+		_ = user.SetPassword("hammond")
 		err = CreateUser(&user)
 		if err != nil {
 			return false, err
@@ -153,7 +153,7 @@ func MigrateClarkson(connectionString string) (bool, error) {
 			setting := GetOrCreateSetting()
 			setting.Currency = user.Currency
 			setting.DistanceUnit = user.DistanceUnit
-			UpdateSettings(setting)
+			_ = UpdateSettings(setting)
 		}
 	}
 

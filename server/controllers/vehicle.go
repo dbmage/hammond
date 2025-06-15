@@ -56,6 +56,7 @@ func createVehicle(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, vehicle)
 }
+
 func getVehicleById(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 
@@ -70,6 +71,7 @@ func getVehicleById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 	}
 }
+
 func updateVehicle(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 	var updateVehicleModel models.UpdateVehicleRequest
@@ -88,6 +90,7 @@ func updateVehicle(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func getAllVehicles(c *gin.Context) {
 	vehicles, err := service.GetAllVehicles()
 	if err != nil {
@@ -97,6 +100,7 @@ func getAllVehicles(c *gin.Context) {
 	c.JSON(200, vehicles)
 
 }
+
 func getMyVehicles(c *gin.Context) {
 	vehicles, err := service.GetUserVehicles(c.MustGet("userId").(string))
 	if err != nil {
@@ -123,6 +127,7 @@ func getFillupsByVehicleId(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func getFuelSubTypesByVehicleId(c *gin.Context) {
 
 	var searchByIdQuery models.SearchByIdQuery
@@ -215,6 +220,7 @@ func updateExpense(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func updateFillup(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 	var updateFillupModel models.UpdateFillupRequest
@@ -250,6 +256,7 @@ func deleteExpense(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func deleteFillup(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
@@ -283,6 +290,7 @@ func getExpenseById(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func getFillupById(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
@@ -387,6 +395,7 @@ func getVehicleUsers(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func deleteVehicle(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 
@@ -412,6 +421,7 @@ func deleteVehicle(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func shareVehicle(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
@@ -428,6 +438,7 @@ func shareVehicle(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func transferVehicle(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
@@ -444,6 +455,7 @@ func transferVehicle(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 	}
 }
+
 func unshareVehicle(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 

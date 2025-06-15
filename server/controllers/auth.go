@@ -21,6 +21,7 @@ func RegisterAnonController(router *gin.RouterGroup) {
 	router.POST("/auth/initialize", initializeSystem)
 
 }
+
 func RegisterAuthController(router *gin.RouterGroup) {
 
 	router.POST("/refresh", refresh)
@@ -63,6 +64,7 @@ func userRegister(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"success": true})
 }
+
 func initializeSystem(c *gin.Context) {
 
 	canInitialize, err := service.CanInitializeSystem()
@@ -75,14 +77,15 @@ func initializeSystem(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 		return
 	}
-	service.UpdateSettings(registerRequest.Currency, *registerRequest.DistanceUnit)
+
+	_ = service.UpdateSettings(registerRequest.Currency, *registerRequest.DistanceUnit)
 
 	if err := service.CreateUser(&registerRequest, db.ADMIN); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("initializeSystem", err))
 		return
 	}
 
-	service.UpdateSettings(registerRequest.Currency, *registerRequest.DistanceUnit)
+	_ = service.UpdateSettings(registerRequest.Currency, *registerRequest.DistanceUnit)
 
 	c.JSON(http.StatusCreated, gin.H{"success": true})
 }
@@ -126,7 +129,10 @@ func refresh(c *gin.Context) {
 		RefreshToken string `json:"refreshToken"`
 	}
 	tokenReq := tokenReqBody{}
-	c.Bind(&tokenReq)
+	if err := c.Bind(&tokenReq); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{})
+		return
+	}
 
 	token, _ := jwt.Parse(tokenReq.RefreshToken, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
@@ -169,8 +175,8 @@ func changePassword(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 		return
 	}
-	user, err := service.GetUserById(c.GetString("userId"))
 
+	user, err := service.GetUserById(c.GetString("userId"))
 	if err != nil {
 		c.JSON(http.StatusForbidden, common.NewError("changePassword", errors.New("not Registered email or invalid password")))
 		return
@@ -181,7 +187,11 @@ func changePassword(c *gin.Context) {
 		return
 	}
 
-	user.SetPassword(request.NewPassword)
+	if err = user.SetPassword(request.NewPassword); err != nil {
+		fmt.Println("error setting password: ", err)
+		c.JSON(http.StatusInternalServerError, common.NewError("changePassword", errors.New("error setting password")))
+	}
+
 	success, _ := service.UpdatePassword(user.ID, request.NewPassword)
 	c.JSON(http.StatusOK, success)
 }

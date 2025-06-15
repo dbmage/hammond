@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"hammond/db"
@@ -28,7 +29,13 @@ func CreateAlert(model models.CreateAlertModel, vehicleId, userId string) (*db.V
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	go CreateAlertInstance(alert.ID)
+	go func() {
+		err := CreateAlertInstance(alert.ID)
+		if err != nil {
+			fmt.Println("error while creating alert instance", err)
+		}
+	}()
+
 	return &alert, nil
 }
 
@@ -48,7 +55,7 @@ func CreateAlertInstance(alertId string) error {
 		lastOccurance = (*existingOccurence)[0]
 		useOccurance = true
 		if alert.AlertFrequency == db.ONETIME {
-			return errors.New("Only single occurance is possible for this kind of alert")
+			return errors.New("only single occurance is possible for this kind of alert")
 		}
 	}
 	users := []string{alert.UserID}
@@ -94,11 +101,11 @@ func CreateAlertInstance(alertId string) error {
 
 func ProcessAlertOccurance(occurance db.AlertOccurance, today time.Time) error {
 	if occurance.ProcessDate != nil {
-		return errors.New("Alert occurence already processed")
+		return errors.New("alert occurence already processed")
 	}
 	alert := occurance.VehicleAlert
 	if !alert.IsActive {
-		return errors.New("Alert is not active")
+		return errors.New("alert is not active")
 	}
 	notification := db.Notification{
 		Title:      alert.Title,
@@ -167,6 +174,6 @@ func FindAlertOccurancesToProcess(today time.Time) ([]db.AlertOccurance, error) 
 	return toReturn, nil
 }
 
-func MarkAlertOccuranceAsCompleted() {
+// func MarkAlertOccuranceAsCompleted() {
 
-}
+// }

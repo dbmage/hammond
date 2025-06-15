@@ -22,6 +22,7 @@ func RegisterAnonMasterConroller(router *gin.RouterGroup) {
 		})
 	})
 }
+
 func RegisterMastersController(router *gin.RouterGroup) {
 
 	router.GET("/settings", getSettings)
@@ -34,6 +35,7 @@ func getSettings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, service.GetSettings())
 }
+
 func udpateSettings(c *gin.Context) {
 	var model models.UpdateSettingModel
 	if err := c.ShouldBind(&model); err == nil {

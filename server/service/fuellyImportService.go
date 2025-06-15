@@ -15,9 +15,14 @@ import (
 func FuellyParseAll(content []byte, userId string) ([]db.Fillup, []db.Expense, []string) {
 	stream := bytes.NewReader(content)
 	reader := csv.NewReader(stream)
-	records, err := reader.ReadAll()
-
 	var errors []string
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		errors = append(errors, err.Error())
+		return nil, nil, errors
+	}
+
 	user, err := GetUserById(userId)
 	if err != nil {
 		errors = append(errors, err.Error())
@@ -35,7 +40,7 @@ func FuellyParseAll(content []byte, userId string) ([]db.Fillup, []db.Expense, [
 		return nil, nil, errors
 	}
 
-	var vehicleMap map[string]db.Vehicle = make(map[string]db.Vehicle)
+	var vehicleMap = make(map[string]db.Vehicle)
 	for _, vehicle := range *vehicles {
 		vehicleMap[vehicle.Nickname] = vehicle
 	}

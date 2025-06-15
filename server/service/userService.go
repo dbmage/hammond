@@ -18,7 +18,9 @@ func CreateUser(userModel *models.RegisterRequest, role db.Role) error {
 		DateFormat:   "MM/dd/yyyy",
 	}
 
-	toCreate.SetPassword(userModel.Password)
+	if err := toCreate.SetPassword(userModel.Password); err != nil {
+		return err
+	}
 
 	return db.CreateUser(&toCreate)
 
@@ -41,13 +43,18 @@ func UpdatePassword(id, password string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	user.SetPassword(password)
+	err = user.SetPassword(password)
+	if err != nil {
+		return false, err
+	}
+
 	err = db.UpdateUser(user)
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
+
 func SetDisabledStatusForUser(userId string, isDisabled bool) error {
 	return db.SetDisabledStatusForUser(userId, isDisabled)
 }

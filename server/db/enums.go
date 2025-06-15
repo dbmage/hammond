@@ -57,36 +57,36 @@ type EnumDetail struct {
 
 var FuelUnitDetails map[FuelUnit]EnumDetail = map[FuelUnit]EnumDetail{
 	LITRE: {
-		Key:  "litre",
+		Key: "litre",
 	},
 	GALLON: {
-		Key:  "gallon",
+		Key: "gallon",
 	}, KILOGRAM: {
-		Key:  "kilogram",
+		Key: "kilogram",
 	}, KILOWATT_HOUR: {
-		Key:  "kilowatthour",
+		Key: "kilowatthour",
 	}, US_GALLON: {
-		Key:  "usgallon",
+		Key: "usgallon",
 	},
 	MINUTE: {
-		Key:  "minutes",
+		Key: "minutes",
 	},
 }
 
 var FuelTypeDetails map[FuelType]EnumDetail = map[FuelType]EnumDetail{
 	PETROL: {
-		Key:  "petrol",
+		Key: "petrol",
 	},
 	DIESEL: {
-		Key:  "diesel",
+		Key: "diesel",
 	}, CNG: {
-		Key:  "cng",
+		Key: "cng",
 	}, LPG: {
-		Key:  "lpg",
+		Key: "lpg",
 	}, ELECTRIC: {
-		Key:  "electric",
+		Key: "electric",
 	}, ETHANOL: {
-		Key:  "ethanol",
+		Key: "ethanol",
 	},
 }
 

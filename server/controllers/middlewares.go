@@ -49,7 +49,8 @@ func UpdateContextUserModel(c *gin.Context, my_user_id string) {
 }
 
 // You can custom middlewares yourself as the doc: https://github.com/gin-gonic/gin#custom-middleware
-//  r.Use(AuthMiddleware(true))
+//
+//	r.Use(AuthMiddleware(true))
 func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		UpdateContextUserModel(c, "")
@@ -59,7 +60,7 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 		})
 		if err != nil {
 			if auto401 {
-				c.AbortWithError(http.StatusUnauthorized, err)
+				_ = c.AbortWithError(http.StatusUnauthorized, err)
 			}
 			return
 		}

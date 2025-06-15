@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -56,6 +56,7 @@ func getAllQuickEntries(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, quickEntries)
 }
+
 func getMyQuickEntries(c *gin.Context) {
 	quickEntries, err := service.GetQuickEntriesForUser(c.MustGet("userId").(string), "")
 	if err != nil {
@@ -94,6 +95,7 @@ func deleteQuickEntryById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 	}
 }
+
 func setQuickEntryAsProcessed(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 
@@ -117,6 +119,7 @@ func uploadFile(c *gin.Context) {
 		c.JSON(http.StatusOK, attachment)
 	}
 }
+
 func getAttachmentFile(c *gin.Context) {
 	var searchByIdQuery models.SearchByIdQuery
 
@@ -144,7 +147,7 @@ func getFileBytes(c *gin.Context, fileVariable string) ([]byte, error) {
 		return nil, err
 	}
 	openedFile, _ := formFile.Open()
-	return ioutil.ReadAll(openedFile)
+	return io.ReadAll(openedFile)
 }
 
 func saveUploadedFile(c *gin.Context, fileVariable string) (*db.Attachment, error) {
@@ -162,6 +165,7 @@ func saveUploadedFile(c *gin.Context, fileVariable string) (*db.Attachment, erro
 
 	return service.CreateAttachment(filePath, file.Filename, file.Size, file.Header.Get("Content-Type"), c.MustGet("userId").(string))
 }
+
 func saveMultipleUploadedFile(c *gin.Context, fileVariable string) ([]*db.Attachment, error) {
 	if fileVariable == "" {
 		fileVariable = "files"
