@@ -1,13 +1,24 @@
-version: "2.1"
+version: "3.8"
+
 services:
   hammond:
-    image: alfhou/hammond
-    container_name: hammond
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hammond_service
     environment:
-      - JWT_SECRET=somethingverystrong
+      CONFIG: /config
+      DATA: /assets
+      JWT_SECRET: somethingverystrong
     volumes:
-      - /path/to/config:/config
-      - /path/to/data:/assets
+      - config_volume:/config
+      - assets_volume:/assets
     ports:
-      - 3000:3000
+      - "3000:3000"
     restart: unless-stopped
+
+volumes:
+  config_volume:
+    driver: local
+  assets_volume:
+    driver: local

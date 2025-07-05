@@ -1,41 +1,56 @@
+# Go Builder Stage
 ARG GO_VERSION=1.24.4
 FROM golang:${GO_VERSION}-alpine AS builder
-RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
-RUN mkdir -p /api
-WORKDIR /api
-COPY ./server/go.mod .
-COPY ./server/go.sum .
-RUN go mod download
-COPY ./server .
-RUN go build -o ./app ./main.go
 
+RUN apk add --no-cache git alpine-sdk
+WORKDIR /api
+
+COPY ./server/go.mod ./server/go.sum ./
+RUN go mod download
+
+COPY ./server ./
+RUN go build -o app ./main.go
+
+# Node Build Stage
 FROM node:16-alpine AS build-stage
+
 WORKDIR /app
+
 COPY ./ui/package*.json ./
-RUN apk add --no-cache autoconf automake build-base nasm libc6-compat python3 py3-pip make g++ libpng-dev zlib-dev pngquant
+RUN apk add --no-cache \
+    autoconf \
+    automake \
+    build-base \
+    nasm \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    libpng-dev \
+    zlib-dev \
+    pngquant
 
 RUN npm install
-COPY ./ui .
+COPY ./ui ./
 RUN npm run build
 
-
+# Final Runtime Stage
 FROM alpine:latest
+
 LABEL org.opencontainers.image.source="https://github.com/alfhou/hammond"
-ENV CONFIG=/config
-ENV DATA=/assets
-ENV UID=998
-ENV PID=100
-ENV GIN_MODE=release
-VOLUME ["/config", "/assets"]
-RUN apk update && apk add ca-certificates tzdata && rm -rf /var/cache/apk/*
-RUN mkdir -p /config; \
-    mkdir -p /assets; \
-    mkdir -p /api
-RUN chmod 777 /config; \
-    chmod 777 /assets
+
+ENV CONFIG=/config \
+    DATA=/assets \
+    UID=998 \
+    PID=100 \
+    GIN_MODE=release
+
+RUN apk add --no-cache ca-certificates tzdata
+
 WORKDIR /api
-COPY --from=builder /api/app .
-# COPY dist ./dist
+
+COPY --from=builder /api/app ./
 COPY --from=build-stage /app/dist ./dist
+
 EXPOSE 3000
 ENTRYPOINT ["./app"]
