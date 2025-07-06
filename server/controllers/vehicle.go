@@ -49,7 +49,12 @@ func createVehicle(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 		return
 	}
-	vehicle, err := service.CreateVehicle(request, c.MustGet("userId").(string))
+
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	vehicle, err := service.CreateVehicle(request, id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("createVehicle", err))
 		return
@@ -58,10 +63,15 @@ func createVehicle(c *gin.Context) {
 }
 
 func getVehicleById(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if c.ShouldBindUri(&searchByIdQuery) == nil {
-		vehicle, err := service.GetVehicleById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
+			return
+		}
+		vehicle, err := service.GetVehicleById(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
 			return
@@ -73,11 +83,16 @@ func getVehicleById(c *gin.Context) {
 }
 
 func updateVehicle(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 	var updateVehicleModel models.UpdateVehicleRequest
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&updateVehicleModel); err == nil {
-			err := service.UpdateVehicle(searchByIdQuery.Id, updateVehicleModel)
+			id, err := common.ToUUID(searchByIdQuery.ID)
+			if err != nil {
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
+				return
+			}
+			err = service.UpdateVehicle(id, updateVehicleModel)
 			if err != nil {
 				c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
 				return
@@ -102,7 +117,11 @@ func getAllVehicles(c *gin.Context) {
 }
 
 func getMyVehicles(c *gin.Context) {
-	vehicles, err := service.GetUserVehicles(c.MustGet("userId").(string))
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	vehicles, err := service.GetUserVehicles(id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("getMyVehicles", err))
 		return
@@ -113,11 +132,15 @@ func getMyVehicles(c *gin.Context) {
 
 func getFillupsByVehicleId(c *gin.Context) {
 
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		fillups, err := service.GetFillupsByVehicleId(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupsByVehicleId", err))
+			return
+		}
+		fillups, err := service.GetFillupsByVehicleId(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupsByVehicleId", err))
 			return
@@ -130,11 +153,15 @@ func getFillupsByVehicleId(c *gin.Context) {
 
 func getFuelSubTypesByVehicleId(c *gin.Context) {
 
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		fuelSubtypes, err := service.GetDistinctFuelSubtypesForVehicle(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFuelSubTypesByVehicleId", err))
+			return
+		}
+		fuelSubtypes, err := service.GetDistinctFuelSubtypesForVehicle(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFuelSubTypesByVehicleId", err))
 			return
@@ -147,11 +174,15 @@ func getFuelSubTypesByVehicleId(c *gin.Context) {
 
 func getExpensesByVehicleId(c *gin.Context) {
 
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		data, err := service.GetExpensesByVehicleId(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpensesByVehicleId", err))
+			return
+		}
+		data, err := service.GetExpensesByVehicleId(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpensesByVehicleId", err))
 			return
@@ -164,7 +195,7 @@ func getExpensesByVehicleId(c *gin.Context) {
 
 func createFillup(c *gin.Context) {
 	var request models.CreateFillupRequest
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&request); err != nil {
@@ -184,7 +215,7 @@ func createFillup(c *gin.Context) {
 
 func createExpense(c *gin.Context) {
 	var request models.CreateExpenseRequest
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&request); err != nil {
@@ -207,9 +238,14 @@ func updateExpense(c *gin.Context) {
 	var updateExpenseModel models.UpdateExpenseRequest
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&updateExpenseModel); err == nil {
-			err := service.UpdateExpense(searchByIdQuery.SubId, updateExpenseModel)
+			id, err := common.ToUUID(searchByIdQuery.SubID)
 			if err != nil {
-				c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpenseById", err))
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("updateExpense", err))
+				return
+			}
+			err = service.UpdateExpense(id, updateExpenseModel)
+			if err != nil {
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("updateExpense", err))
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{})
@@ -226,9 +262,14 @@ func updateFillup(c *gin.Context) {
 	var updateFillupModel models.UpdateFillupRequest
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&updateFillupModel); err == nil {
-			err := service.UpdateFillup(searchByIdQuery.SubId, updateFillupModel)
+			id, err := common.ToUUID(searchByIdQuery.SubID)
 			if err != nil {
-				c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupById", err))
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("updateFillup", err))
+				return
+			}
+			err = service.UpdateFillup(id, updateFillupModel)
+			if err != nil {
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("updateFillup", err))
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{})
@@ -244,10 +285,14 @@ func deleteExpense(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		err := service.DeleteExpenseById(searchByIdQuery.SubId)
+		id, err := common.ToUUID(searchByIdQuery.SubID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpenseById", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteExpense", err))
+			return
+		}
+		err = service.DeleteExpenseById(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteExpense", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -261,10 +306,14 @@ func deleteFillup(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		err := service.DeleteFillupById(searchByIdQuery.SubId)
+		id, err := common.ToUUID(searchByIdQuery.SubID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupById", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteFillup", err))
+			return
+		}
+		err = service.DeleteFillupById(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteFillup", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -278,8 +327,12 @@ func getExpenseById(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		obj, err := service.GetExpenseById(searchByIdQuery.SubId)
+		id, err := common.ToUUID(searchByIdQuery.SubID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpenseById", err))
+			return
+		}
+		obj, err := service.GetExpenseById(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getExpenseById", err))
 			return
@@ -295,8 +348,12 @@ func getFillupById(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		obj, err := service.GetFillupById(searchByIdQuery.SubId)
+		id, err := common.ToUUID(searchByIdQuery.SubID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupById", err))
+			return
+		}
+		obj, err := service.GetFillupById(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getFillupById", err))
 			return
@@ -309,11 +366,16 @@ func getFillupById(c *gin.Context) {
 }
 
 func createVehicleAttachment(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 	var dataModel models.CreateVehicleAttachmentModel
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		if err := c.ShouldBind(&dataModel); err == nil {
-			vehicle, err := service.GetVehicleById(searchByIdQuery.Id)
+			id, err := common.ToUUID(searchByIdQuery.ID)
+			if err != nil {
+				c.JSON(http.StatusUnprocessableEntity, common.NewError("createVehicleAttachment", err))
+				return
+			}
+			vehicle, err := service.GetVehicleById(id)
 			if err != nil {
 				c.JSON(http.StatusUnprocessableEntity, common.NewError("createVehicleAttachment", err))
 				return
@@ -338,13 +400,17 @@ func createVehicleAttachment(c *gin.Context) {
 }
 
 func getVehicleAttachments(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		vehicle, err := service.GetVehicleById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("createVehicleAttachment", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleAttachments", err))
+			return
+		}
+		vehicle, err := service.GetVehicleById(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleAttachments", err))
 			return
 		}
 
@@ -361,11 +427,15 @@ func getVehicleAttachments(c *gin.Context) {
 }
 
 func getVehicleUsers(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		vehicle, err := service.GetVehicleById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleUsers", err))
+			return
+		}
+		vehicle, err := service.GetVehicleById(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleUsers", err))
 			return
@@ -397,22 +467,32 @@ func getVehicleUsers(c *gin.Context) {
 }
 
 func deleteVehicle(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 
-		canDelete, err := service.CanDeleteVehicle(searchByIdQuery.Id, c.MustGet("userId").(string))
+		id, err := common.ToUUID(c.MustGet("userId"))
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+
+		searchID, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteVehicle", err))
+			return
+		}
+		canDelete, err := service.CanDeleteVehicle(searchID, id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteVehicle", err))
 			return
 		}
 		if !canDelete {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", errors.New("you are not allowed to delete this vehicle")))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteVehicle", errors.New("you are not allowed to delete this vehicle")))
 			return
 		}
-		err = service.DeleteVehicle(searchByIdQuery.Id)
+		err = service.DeleteVehicle(searchID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteVehicle", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -426,8 +506,18 @@ func shareVehicle(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			return
+		}
+		subID, err := common.ToUUID(searchByIdQuery.SubID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			return
+		}
 
-		err := service.ShareVehicle(searchByIdQuery.Id, searchByIdQuery.SubId)
+		err = service.ShareVehicle(id, subID)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
 			return
@@ -444,9 +534,24 @@ func transferVehicle(c *gin.Context) {
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 
-		err := service.TransferVehicle(searchByIdQuery.Id, c.MustGet("userId").(string), searchByIdQuery.SubId)
+		id, err := common.ToUUID(c.MustGet("userId"))
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+
+		searchID, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("transferVehicle", err))
+			return
+		}
+		subID, err := common.ToUUID(searchByIdQuery.SubID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("transferVehicle", err))
+			return
+		}
+		err = service.TransferVehicle(searchID, id, subID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("transferVehicle", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -460,10 +565,19 @@ func unshareVehicle(c *gin.Context) {
 	var searchByIdQuery models.SubItemQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		err := service.UnshareVehicle(searchByIdQuery.Id, searchByIdQuery.SubId)
+		id, err := common.ToUUID(searchByIdQuery.ID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("shareVehicle", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("unShareVehicle", err))
+			return
+		}
+		subID, err := common.ToUUID(searchByIdQuery.SubID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("unShareVehicle", err))
+			return
+		}
+		err = service.UnshareVehicle(id, subID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("unShareVehicle", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -474,13 +588,17 @@ func unshareVehicle(c *gin.Context) {
 }
 
 func getVehicleStats(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-
-		vehicle, err := service.GetVehicleById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleState", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleStats", err))
+			return
+		}
+		vehicle, err := service.GetVehicleById(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleStats", err))
 			return
 		}
 
@@ -497,7 +615,11 @@ func getMystats(c *gin.Context) {
 	var model models.UserStatsQueryModel
 	if err := c.ShouldBind(&model); err == nil {
 
-		stats, err := service.GetUserStats(c.MustGet("userId").(string), model)
+		id, err := common.ToUUID(c.MustGet("userId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+		stats, err := service.GetUserStats(id, model)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getMyVehicles", err))
 			return

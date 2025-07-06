@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"hammond/common"
 	"hammond/models"
 	"hammond/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func RegisteImportController(router *gin.RouterGroup) {
@@ -22,7 +24,12 @@ func fuellyImport(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
-	errors := service.FuellyImport(bytes, c.MustGet("userId").(string))
+
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	errors := service.FuellyImport(bytes, id)
 	if len(errors) > 0 {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
 		return
@@ -36,8 +43,14 @@ func drivvoImport(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
-	vehicleId := c.PostForm("vehicleID")
-	if vehicleId == "" {
+	vehicleIdString := c.PostForm("vehicleID")
+	if vehicleIdString == "" {
+		c.JSON(http.StatusUnprocessableEntity, "Missing Vehicle ID")
+		return
+	}
+
+	vehicleId, err := uuid.Parse(vehicleIdString)
+	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, "Missing Vehicle ID")
 		return
 	}
@@ -47,7 +60,11 @@ func drivvoImport(c *gin.Context) {
 		return
 	}
 
-	errors := service.DrivvoImport(bytes, c.MustGet("userId").(string), vehicleId, importLocation)
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	errors := service.DrivvoImport(bytes, id, vehicleId, importLocation)
 	if len(errors) > 0 {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
 		return
@@ -61,11 +78,16 @@ func genericImport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if json.VehicleId == "" {
+	if json.VehicleId == uuid.Nil {
 		c.JSON(http.StatusUnprocessableEntity, "Missing Vehicle ID")
 		return
 	}
-	errors := service.GenericImport(json, c.MustGet("userId").(string))
+
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	errors := service.GenericImport(json, id)
 	if len(errors) > 0 {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errors})
 		return

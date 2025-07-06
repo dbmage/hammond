@@ -2,6 +2,8 @@ package service
 
 import (
 	"hammond/db"
+
+	"github.com/google/uuid"
 )
 
 func CanInitializeSystem() (bool, error) {
@@ -15,7 +17,7 @@ func UpdateSettings(currency string, distanceUnit db.DistanceUnit) error {
 	return db.UpdateSettings(setting)
 }
 
-func UpdateUserSettings(userId, currency string, distanceUnit db.DistanceUnit, dateFormat string) error {
+func UpdateUserSettings(userId uuid.UUID, currency string, distanceUnit db.DistanceUnit, dateFormat string) error {
 	user, err := db.GetUserById(userId)
 	if err != nil {
 		return err

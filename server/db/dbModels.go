@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -98,15 +99,15 @@ func (v *Vehicle) FuelUnitDetail() EnumDetail {
 
 type UserVehicle struct {
 	Base
-	UserID    string `gorm:"primaryKey"`
-	User      User   `json:"user"`
-	VehicleID string `gorm:"primaryKey"`
-	IsOwner   bool   `json:"isOwner"`
+	UserID    uuid.UUID `gorm:"primaryKey;type:uuid"`
+	User      User      `json:"user"`
+	VehicleID uuid.UUID `gorm:"primaryKey;type:uuid"`
+	IsOwner   bool      `json:"isOwner"`
 }
 
 type Fillup struct {
 	Base
-	VehicleID       string       `json:"vehicleId"`
+	VehicleID       uuid.UUID    `gorm:"type:uuid" json:"vehicleId"`
 	Vehicle         Vehicle      `json:"-"`
 	FuelUnit        FuelUnit     `json:"fuelUnit"`
 	FuelQuantity    float32      `json:"fuelQuantity"`
@@ -117,7 +118,7 @@ type Fillup struct {
 	HasMissedFillup *bool        `json:"hasMissedFillup"`
 	Comments        string       `json:"comments"`
 	FillingStation  string       `json:"fillingStation"`
-	UserID          string       `json:"userId"`
+	UserID          uuid.UUID    `gorm:"type:uuid" json:"userId"`
 	User            User         `json:"user"`
 	Date            time.Time    `json:"date"`
 	Currency        string       `json:"currency"`
@@ -142,13 +143,13 @@ func (b *Fillup) MarshalJSON() ([]byte, error) {
 
 type Expense struct {
 	Base
-	VehicleID    string       `json:"vehicleId"`
+	VehicleID    uuid.UUID    `gorm:"type:uuid" json:"vehicleId"`
 	Vehicle      Vehicle      `json:"-"`
 	Amount       float32      `json:"amount"`
 	OdoReading   int          `json:"odoReading"`
 	Comments     string       `json:"comments"`
 	ExpenseType  string       `json:"expenseType"`
-	UserID       string       `json:"userId"`
+	UserID       uuid.UUID    `gorm:"type:uuid" json:"userId"`
 	User         User         `json:"user"`
 	Date         time.Time    `json:"date"`
 	Currency     string       `json:"currency"`
@@ -175,37 +176,37 @@ type JobLock struct {
 
 type Attachment struct {
 	Base
-	Path         string `json:"path"`
-	OriginalName string `json:"originalName"`
-	Size         int64  `json:"size"`
-	ContentType  string `json:"contentType"`
-	Title        string `gorm:"->" json:"title"`
-	UserID       string `json:"userId"`
-	User         User   `json:"user"`
+	Path         string    `json:"path"`
+	OriginalName string    `json:"originalName"`
+	Size         int64     `json:"size"`
+	ContentType  string    `json:"contentType"`
+	Title        string    `gorm:"->" json:"title"`
+	UserID       uuid.UUID `gorm:"type:uuid" json:"userId"`
+	User         User      `json:"user"`
 }
 
 type QuickEntry struct {
 	Base
-	AttachmentID string     `json:"attachmentId"`
+	AttachmentID uuid.UUID  `gorm:"type:uuid" json:"attachmentId"`
 	Attachment   Attachment `json:"attachment"`
 	ProcessDate  *time.Time `json:"processDate"`
-	UserID       string     `json:"userId"`
+	UserID       uuid.UUID  `gorm:"type:uuid" json:"userId"`
 	User         User       `json:"user"`
 	Comments     string     `json:"comments"`
 }
 
 type VehicleAttachment struct {
 	Base
-	AttachmentID string `gorm:"primaryKey" json:"attachmentId"`
-	VehicleID    string `gorm:"primaryKey" json:"vehicleId"`
-	Title        string `json:"title"`
+	AttachmentID uuid.UUID `gorm:"primaryKey;type:uuid" json:"attachmentId"`
+	VehicleID    uuid.UUID `gorm:"primaryKey;type:uuid" json:"vehicleId"`
+	Title        string    `json:"title"`
 }
 
 type VehicleAlert struct {
 	Base
-	VehicleID       string         `json:"vehicleId"`
+	VehicleID       uuid.UUID      `gorm:"type:uuid" json:"vehicleId"`
 	Vehicle         Vehicle        `json:"-"`
-	UserID          string         `json:"userId"`
+	UserID          uuid.UUID      `gorm:"type:uuid" json:"userId"`
 	User            User           `json:"user"`
 	Title           string         `json:"title"`
 	Comments        string         `json:"comments"`
@@ -222,11 +223,11 @@ type VehicleAlert struct {
 }
 type AlertOccurance struct {
 	Base
-	VehicleID        string       `json:"vehicleId"`
+	VehicleID        uuid.UUID    `gorm:"type:uuid" json:"vehicleId"`
 	Vehicle          Vehicle      `json:"-"`
-	VehicleAlertID   string       `json:"vehicleAlertId"`
+	VehicleAlertID   uuid.UUID    `gorm:"type:uuid" json:"vehicleAlertId"`
 	VehicleAlert     VehicleAlert `json:"-"`
-	UserID           string       `json:"userId"`
+	UserID           uuid.UUID    `gorm:"type:uuid" json:"userId"`
 	User             User         `json:"-"`
 	OdoReading       int          `json:"odoReading"`
 	Date             *time.Time   `json:"date"`
@@ -239,11 +240,11 @@ type Notification struct {
 	Base
 	Title      string     `json:"title"`
 	Content    string     `json:"content"`
-	UserID     string     `json:"userId"`
-	VehicleID  string     `json:"vehicleId"`
+	UserID     uuid.UUID  `gorm:"type:uuid" json:"userId"`
+	VehicleID  uuid.UUID  `gorm:"type:uuid" json:"vehicleId"`
 	User       User       `json:"-"`
 	Date       time.Time  `json:"date"`
 	ReadDate   *time.Time `json:"readDate"`
-	ParentID   string     `json:"parentId"`
+	ParentID   uuid.UUID  `gorm:"type:uuid" json:"parentId"`
 	ParentType string     `json:"parentType"`
 }

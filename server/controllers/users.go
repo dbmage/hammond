@@ -28,9 +28,14 @@ func allUsers(c *gin.Context) {
 }
 
 func enableUser(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-		err := service.SetDisabledStatusForUser(searchByIdQuery.Id, false)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, err)
+			return
+		}
+		err = service.SetDisabledStatusForUser(id, false)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err)
 			return
@@ -43,9 +48,14 @@ func enableUser(c *gin.Context) {
 }
 
 func disableUser(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
-		err := service.SetDisabledStatusForUser(searchByIdQuery.Id, true)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, err)
+			return
+		}
+		err = service.SetDisabledStatusForUser(id, true)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err)
 			return

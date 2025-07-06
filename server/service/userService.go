@@ -5,6 +5,8 @@ import (
 
 	"hammond/db"
 	"hammond/models"
+
+	"github.com/google/uuid"
 )
 
 func CreateUser(userModel *models.RegisterRequest, role db.Role) error {
@@ -26,11 +28,9 @@ func CreateUser(userModel *models.RegisterRequest, role db.Role) error {
 
 }
 
-func GetUserById(id string) (*db.User, error) {
+func GetUserById(id uuid.UUID) (*db.User, error) {
 	var myUserModel db.User
-	tx := db.DB.Debug().Preload("Vehicles").First(&myUserModel, map[string]string{
-		"ID": id,
-	})
+	tx := db.DB.Debug().Preload("Vehicles").First(&myUserModel, "id = ?", id)
 	return &myUserModel, tx.Error
 }
 
@@ -38,7 +38,7 @@ func GetAllUsers() (*[]db.User, error) {
 	return db.GetAllUsers()
 }
 
-func UpdatePassword(id, password string) (bool, error) {
+func UpdatePassword(id uuid.UUID, password string) (bool, error) {
 	user, err := GetUserById(id)
 	if err != nil {
 		return false, err
@@ -55,6 +55,6 @@ func UpdatePassword(id, password string) (bool, error) {
 	return true, nil
 }
 
-func SetDisabledStatusForUser(userId string, isDisabled bool) error {
+func SetDisabledStatusForUser(userId uuid.UUID, isDisabled bool) error {
 	return db.SetDisabledStatusForUser(userId, isDisabled)
 }

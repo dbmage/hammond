@@ -12,14 +12,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"hammond/db"
 	"hammond/internal/sanitize"
 	"hammond/models"
-
-	uuid "github.com/satori/go.uuid"
 )
 
-func CreateAttachment(path, originalName string, size int64, contentType, userId string) (*db.Attachment, error) {
+func CreateAttachment(path, originalName string, size int64, contentType string, userId uuid.UUID) (*db.Attachment, error) {
 	model := &db.Attachment{
 		Path:         path,
 		OriginalName: originalName,
@@ -35,7 +34,7 @@ func CreateAttachment(path, originalName string, size int64, contentType, userId
 	return model, nil
 }
 
-func CreateQuickEntry(model models.CreateQuickEntryModel, attachmentId, userId string) (*db.QuickEntry, error) {
+func CreateQuickEntry(model models.CreateQuickEntryModel, attachmentId, userId uuid.UUID) (*db.QuickEntry, error) {
 	toCreate := &db.QuickEntry{
 		AttachmentID: attachmentId,
 		UserID:       userId,
@@ -53,24 +52,24 @@ func GetAllQuickEntries(sorting string) (*[]db.QuickEntry, error) {
 	return db.GetAllQuickEntries(sorting)
 }
 
-func GetQuickEntriesForUser(userId, sorting string) (*[]db.QuickEntry, error) {
+func GetQuickEntriesForUser(userId uuid.UUID, sorting string) (*[]db.QuickEntry, error) {
 	return db.GetQuickEntriesForUser(userId, sorting)
 }
 
-func GetQuickEntryById(id string) (*db.QuickEntry, error) {
+func GetQuickEntryById(id uuid.UUID) (*db.QuickEntry, error) {
 	return db.GetQuickEntryById(id)
 }
 
-func DeleteQuickEntryById(id string) error {
+func DeleteQuickEntryById(id uuid.UUID) error {
 	return db.DeleteQuickEntryById(id)
 }
 
-func SetQuickEntryAsProcessed(id string) error {
+func SetQuickEntryAsProcessed(id uuid.UUID) error {
 	return db.SetQuickEntryAsProcessed(id, time.Now())
 
 }
 
-func GetAttachmentById(id string) (*db.Attachment, error) {
+func GetAttachmentById(id uuid.UUID) (*db.Attachment, error) {
 	return db.GetAttachmentById(id)
 }
 
@@ -123,7 +122,7 @@ func GetFilePath(originalName string) string {
 func getFileName(orig string) string {
 
 	ext := filepath.Ext(orig)
-	return uuid.NewV4().String() + ext
+	return uuid.New().String() + ext
 
 }
 

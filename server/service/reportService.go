@@ -7,9 +7,11 @@ import (
 	"hammond/common"
 	"hammond/db"
 	"hammond/models"
+
+	"github.com/google/uuid"
 )
 
-func GetMileageByVehicleId(vehicleId string, since time.Time, mileageOption string) (mileage []models.MileageModel, err error) {
+func GetMileageByVehicleId(vehicleId uuid.UUID, since time.Time, mileageOption string) (mileage []models.MileageModel, err error) {
 	data, err := db.GetFillupsByVehicleIdSince(vehicleId, since)
 	if err != nil {
 		return nil, err

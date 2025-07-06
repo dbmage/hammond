@@ -1,35 +1,51 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"strings"
 
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
-
 	"gorm.io/gorm"
 )
 
-// DB is
 var DB *gorm.DB
 
-// Init is used to Initialize Database
 func Init() (*gorm.DB, error) {
-	// github.com/mattn/go-sqlite3
-	configPath := os.Getenv("CONFIG")
-	dbPath := path.Join(configPath, "hammond.db")
-	log.Println(dbPath)
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	usePostgres := strings.ToLower(os.Getenv("USE_POSTGRES")) == "true"
+
+	var db *gorm.DB
+	var err error
+
+	config := &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	}
+	if usePostgres {
+		dsn := os.Getenv("POSTGRES_DSN") // example: "host=localhost user=postgres password=mysecret dbname=hammondDB port=5432 sslmode=disable"
+		if dsn == "" {
+			return nil, errors.New("no Postgres DSN set")
+		}
+		log.Println("Using Postgres")
+		db, err = gorm.Open(postgres.Open(dsn), config)
+	} else {
+		configPath := os.Getenv("CONFIG")
+		dbPath := path.Join(configPath, "hammond.db")
+		log.Println("Using SQLite at:", dbPath)
+		db, err = gorm.Open(sqlite.Open(dbPath), config)
+	}
+
 	if err != nil {
-		fmt.Println("db err: ", err)
+		fmt.Println("db err:", err)
 		return nil, err
 	}
 
 	localDB, _ := db.DB()
 	localDB.SetMaxIdleConns(10)
+
 	//db.LogMode(true)
 	DB = db
 	return DB, nil

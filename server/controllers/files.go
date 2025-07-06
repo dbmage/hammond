@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -40,7 +41,13 @@ func createQuickEntry(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
-	quickEntry, err := service.CreateQuickEntry(request, attachment.ID, c.MustGet("userId").(string))
+
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, common.NewError("createQuickEntry", errors.New("userId is not a valid uuid")))
+		return
+	}
+	quickEntry, err := service.CreateQuickEntry(request, attachment.ID, id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("createQuickEntry", err))
 		return
@@ -58,7 +65,11 @@ func getAllQuickEntries(c *gin.Context) {
 }
 
 func getMyQuickEntries(c *gin.Context) {
-	quickEntries, err := service.GetQuickEntriesForUser(c.MustGet("userId").(string), "")
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+	quickEntries, err := service.GetQuickEntriesForUser(id, "")
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("getMyQuickEntries", err))
 		return
@@ -67,12 +78,17 @@ func getMyQuickEntries(c *gin.Context) {
 }
 
 func getQuickEntryById(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if c.ShouldBindUri(&searchByIdQuery) == nil {
-		quickEntry, err := service.GetQuickEntryById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getQuickEntryById", err))
+			return
+		}
+		quickEntry, err := service.GetQuickEntryById(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getQuickEntryById", err))
 			return
 		}
 		c.JSON(http.StatusOK, quickEntry)
@@ -82,10 +98,14 @@ func getQuickEntryById(c *gin.Context) {
 }
 
 func deleteQuickEntryById(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
-
+	var searchByIdQuery models.SearchByIDQuery
 	if c.ShouldBindUri(&searchByIdQuery) == nil {
-		err := service.DeleteQuickEntryById(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteQuickEntryById", err))
+			return
+		}
+		err = service.DeleteQuickEntryById(id)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("deleteQuickEntryById", err))
 			return
@@ -97,12 +117,17 @@ func deleteQuickEntryById(c *gin.Context) {
 }
 
 func setQuickEntryAsProcessed(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if c.ShouldBindUri(&searchByIdQuery) == nil {
-		err := service.SetQuickEntryAsProcessed(searchByIdQuery.Id)
+		id, err := common.ToUUID(searchByIdQuery.ID)
 		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, common.NewError("getVehicleById", err))
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("setQuickEntryAsProcessed", err))
+			return
+		}
+		err = service.SetQuickEntryAsProcessed(id)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("setQuickEntryAsProcessed", err))
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
@@ -121,21 +146,39 @@ func uploadFile(c *gin.Context) {
 }
 
 func getAttachmentFile(c *gin.Context) {
-	var searchByIdQuery models.SearchByIdQuery
+	var query models.SearchByIDQuery
 
-	if c.ShouldBindUri(&searchByIdQuery) == nil {
-
-		attachment, err := db.GetAttachmentById(searchByIdQuery.Id)
-		if err == nil {
-			if _, err = os.Stat(attachment.Path); os.IsNotExist(err) {
-				c.Status(404)
-			} else {
-				c.File(attachment.Path)
-			}
-		}
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+	// Bind URI param
+	if err := c.ShouldBindUri(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid or missing ID",
+			"error":   err.Error(),
+		},
+		)
+		return
 	}
+
+	id, err := common.ToUUID(query.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
+		return
+	}
+
+	// Fetch attachment
+	attachment, err := db.GetAttachmentById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Attachment not found"})
+		return
+	}
+
+	// Check if file exists
+	if _, err := os.Stat(attachment.Path); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found on disk"})
+		return
+	}
+
+	// Serve file
+	c.File(attachment.Path)
 }
 
 func getFileBytes(c *gin.Context, fileVariable string) ([]byte, error) {
@@ -163,7 +206,11 @@ func saveUploadedFile(c *gin.Context, fileVariable string) (*db.Attachment, erro
 		return nil, err
 	}
 
-	return service.CreateAttachment(filePath, file.Filename, file.Size, file.Header.Get("Content-Type"), c.MustGet("userId").(string))
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		return nil, errors.New("unable to parse user ID")
+	}
+	return service.CreateAttachment(filePath, file.Filename, file.Size, file.Header.Get("Content-Type"), id)
 }
 
 func saveMultipleUploadedFile(c *gin.Context, fileVariable string) ([]*db.Attachment, error) {
@@ -181,7 +228,11 @@ func saveMultipleUploadedFile(c *gin.Context, fileVariable string) ([]*db.Attach
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			return nil, err
 		}
-		attachment, err := service.CreateAttachment(filePath, file.Filename, file.Size, file.Header.Get("Content-Type"), c.MustGet("userId").(string))
+		id, err := common.ToUUID(c.MustGet("userId"))
+		if err != nil {
+			return nil, errors.New("unable to parse user ID")
+		}
+		attachment, err := service.CreateAttachment(filePath, file.Filename, file.Size, file.Header.Get("Content-Type"), id)
 		if err != nil {
 			return nil, err
 		}

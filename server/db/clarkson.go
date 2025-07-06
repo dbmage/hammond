@@ -3,6 +3,7 @@ package db
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/driver/mysql"
 
 	"gorm.io/gorm"
@@ -60,20 +61,20 @@ func MigrateClarkson(connectionString string) (bool, error) {
 
 	/////Models
 	type CUser struct {
-		ID                  string `gorm:"column:id"`
-		Email               string `gorm:"column:email"`
-		Username            string `gorm:"column:username"`
-		Password            string `gorm:"column:password"`
-		Admin               bool   `gorm:"column:admin"`
-		FuelUnit            int    `gorm:"column:fuelUnit"`
-		DistanceUnit        int    `gorm:"column:distanceUnit"`
-		FuelConsumptionUnit int    `gorm:"column:fuelConsumptionUnit"`
-		CurrencyUnit        int    `gorm:"column:currencyUnit"`
+		ID                  uuid.UUID `gorm:"column:id;type:uuid"`
+		Email               string    `gorm:"column:email"`
+		Username            string    `gorm:"column:username"`
+		Password            string    `gorm:"column:password"`
+		Admin               bool      `gorm:"column:admin"`
+		FuelUnit            int       `gorm:"column:fuelUnit"`
+		DistanceUnit        int       `gorm:"column:distanceUnit"`
+		FuelConsumptionUnit int       `gorm:"column:fuelConsumptionUnit"`
+		CurrencyUnit        int       `gorm:"column:currencyUnit"`
 	}
 
 	type CVehicle struct {
-		ID                string `gorm:"column:id"`
-		User              string
+		ID                uuid.UUID `gorm:"column:id;type:uuid"`
+		User              uuid.UUID `gorm:"type:uuid"`
 		Name              string
 		Registration      string
 		Make              string
@@ -85,8 +86,8 @@ func MigrateClarkson(connectionString string) (bool, error) {
 	}
 
 	type CFuel struct {
-		ID              string    `gorm:"column:id"`
-		Vehicle         string    `gorm:"column:vehicle"`
+		ID              uuid.UUID `gorm:"column:id;type:uuid"`
+		Vehicle         uuid.UUID `gorm:"column:vehicle"`
 		Date            time.Time `gorm:"column:date"`
 		FuelAmount      float32   `gorm:"column:fuelAmount"`
 		TotalCost       float32   `gorm:"column:totalCost"`
@@ -122,8 +123,8 @@ func MigrateClarkson(connectionString string) (bool, error) {
 		5: "CAD",
 	}
 
-	newUserIdsMap := make(map[string]User)
-	oldUserIdsMap := make(map[string]CUser)
+	newUserIdsMap := make(map[uuid.UUID]User)
+	oldUserIdsMap := make(map[uuid.UUID]CUser)
 
 	var allUsers []CUser
 	cdb.Table("Users").Find(&allUsers)
@@ -157,9 +158,9 @@ func MigrateClarkson(connectionString string) (bool, error) {
 		}
 	}
 
-	newVehicleIdsMap := make(map[string]Vehicle)
-	oldVehicleIdsMap := make(map[string]CVehicle)
-	vehicleUserMap := make(map[string]User)
+	newVehicleIdsMap := make(map[uuid.UUID]Vehicle)
+	oldVehicleIdsMap := make(map[uuid.UUID]CVehicle)
+	vehicleUserMap := make(map[uuid.UUID]User)
 	var allVehicles []CVehicle
 	cdb.Table("Vehicles").Find(&allVehicles)
 	for _, model := range allVehicles {

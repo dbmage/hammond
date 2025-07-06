@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -51,7 +52,7 @@ func MilesToKm(miles float32) float32 {
 }
 
 // A Util function to generate jwt_token which can be used in the request header
-func GenToken(id string, role db.Role) (string, string) {
+func GenToken(id uuid.UUID, role db.Role) (string, string) {
 	jwt_token := jwt.New(jwt.GetSigningMethod("HS256"))
 	// Set some claims
 	jwt_token.Claims = jwt.MapClaims{
@@ -76,14 +77,14 @@ func GenToken(id string, role db.Role) (string, string) {
 //
 //	{"database": {"hello":"no such table", error: "not_exists"}}
 type CommonError struct {
-	Errors map[string]interface{} `json:"errors"`
+	Errors map[string]any `json:"errors"`
 }
 
 // To handle the error returned by c.Bind in gin framework
 // https://github.com/go-playground/validator/blob/v9/_examples/translations/main.go
 func NewValidatorError(err error) CommonError {
 	res := CommonError{}
-	res.Errors = make(map[string]interface{})
+	res.Errors = make(map[string]any)
 	errs := err.(validator.ValidationErrors)
 	for _, v := range errs {
 		// can translate each error one at a time.
@@ -101,7 +102,7 @@ func NewValidatorError(err error) CommonError {
 // Warp the error info in a object
 func NewError(key string, err error) CommonError {
 	res := CommonError{}
-	res.Errors = make(map[string]interface{})
+	res.Errors = make(map[string]any)
 	res.Errors[key] = err.Error()
 	return res
 }
@@ -109,7 +110,20 @@ func NewError(key string, err error) CommonError {
 // Changed the c.MustBindWith() ->  c.ShouldBindWith().
 // I don't want to auto return 400 when error happened.
 // origin function is here: https://github.com/gin-gonic/gin/blob/master/context.go
-func Bind(c *gin.Context, obj interface{}) error {
+func Bind(c *gin.Context, obj any) error {
 	b := binding.Default(c.Request.Method, c.ContentType())
 	return c.ShouldBindWith(obj, b)
+}
+
+// ToUUID attempts to convert any value into a uuid.UUID.
+// It returns uuid.Nil if conversion fails.
+func ToUUID(v any) (uuid.UUID, error) {
+	switch val := v.(type) {
+	case string:
+		return uuid.Parse(val)
+	case uuid.UUID:
+		return val, nil
+	default:
+		return uuid.Nil, fmt.Errorf("cannot convert type %T to uuid.UUID", v)
+	}
 }

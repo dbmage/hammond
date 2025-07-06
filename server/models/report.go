@@ -5,11 +5,13 @@ import (
 	"time"
 
 	"hammond/db"
+
+	"github.com/google/uuid"
 )
 
 type MileageModel struct {
 	Date         time.Time       `form:"date" json:"date" binding:"required" time_format:"2006-01-02"`
-	VehicleID    string          `form:"vehicleId" json:"vehicleId" binding:"required"`
+	VehicleID    uuid.UUID       `form:"vehicleId" gorm:"type:uuid" json:"vehicleId" binding:"required"`
 	FuelUnit     db.FuelUnit     `form:"fuelUnit" json:"fuelUnit" binding:"required"`
 	FuelQuantity float32         `form:"fuelQuantity" json:"fuelQuantity" binding:"required"`
 	PerUnitPrice float32         `form:"perUnitPrice" json:"perUnitPrice" binding:"required"`

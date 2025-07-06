@@ -1,18 +1,44 @@
-version: "3.8"
-
 services:
+  postgres:
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecret
+      POSTGRES_DB: hammondDB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - hammond
+    ports:
+      - "5432:5432"
+
   hammond:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hammond_service
+    image: hammond:latest
+    pull_policy: never
     environment:
       CONFIG: /config
       DATA: /assets
       JWT_SECRET: somethingverystrong
+      USE_POSTGRES: "true"
+      POSTGRES_DSN: "host=postgres user=postgres password=mysecret dbname=hammondDB port=5432 sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - config_volume:/config
       - assets_volume:/assets
+    networks:
+      - hammond
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -22,3 +48,9 @@ volumes:
     driver: local
   assets_volume:
     driver: local
+  pgdata:
+    driver: local
+
+networks:
+  hammond:
+    driver: bridge

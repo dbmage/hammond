@@ -14,6 +14,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func RegisterAnonController(router *gin.RouterGroup) {
@@ -43,7 +44,12 @@ func ShouldBeAdmin() gin.HandlerFunc {
 }
 
 func me(c *gin.Context) {
-	user, err := service.GetUserById(c.MustGet("userId").(string))
+	id, err := common.ToUUID(c.MustGet("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+
+	user, err := service.GetUserById(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{})
 	}
@@ -146,7 +152,11 @@ func refresh(c *gin.Context) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// Get the user record from database or
 		// run through your business logic to verify if the user can log in
-		user, err := service.GetUserById(claims["id"].(string))
+		id, err := common.ToUUID(claims["id"])
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+		user, err := service.GetUserById(id)
 		if err == nil {
 
 			token, refreshToken := common.GenToken(user.ID, user.Role)
@@ -176,7 +186,14 @@ func changePassword(c *gin.Context) {
 		return
 	}
 
-	user, err := service.GetUserById(c.GetString("userId"))
+	value := c.GetString("userId")
+	id, err := uuid.Parse(value)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, common.NewError("changePassword", errors.New("unable to change the password")))
+		return
+	}
+
+	user, err := service.GetUserById(id)
 	if err != nil {
 		c.JSON(http.StatusForbidden, common.NewError("changePassword", errors.New("not Registered email or invalid password")))
 		return

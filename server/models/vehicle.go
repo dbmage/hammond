@@ -6,15 +6,18 @@ import (
 	"hammond/db"
 
 	_ "github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
-type SearchByIdQuery struct {
-	Id string `binding:"required" uri:"id" json:"id" form:"id"`
+type SearchByIDQuery struct {
+	ID string `binding:"required" uri:"id" json:"id" form:"id"`
 }
+
 type SubItemQuery struct {
-	Id    string `binding:"required" uri:"id" json:"id" form:"id"`
-	SubId string `binding:"required" uri:"subId" json:"subId" form:"subId"`
+	ID    string `binding:"required" uri:"id" json:"id" form:"id"`
+	SubID string `binding:"required" uri:"subId" json:"subId" form:"subId"`
 }
+
 type CreateVehicleRequest struct {
 	Nickname          string       `form:"nickname" json:"nickname" binding:"required"`
 	Registration      string       `form:"registration" json:"registration" binding:"required"`
@@ -31,16 +34,17 @@ type CreateVehicleRequest struct {
 type UpdateVehicleRequest struct {
 	CreateVehicleRequest
 }
+
 type UserVehicleSimpleModel struct {
-	ID        string `json:"id"`
-	UserID    string `json:"userId"`
-	VehicleID string `json:"vehicleId"`
-	IsOwner   bool   `json:"isOwner"`
-	Name      string `json:"name"`
+	ID        uuid.UUID `gorm:"type:uuid" json:"id"`
+	UserID    uuid.UUID `gorm:"type:uuid" json:"userId"`
+	VehicleID uuid.UUID `gorm:"type:uuid" json:"vehicleId"`
+	IsOwner   bool      `json:"isOwner"`
+	Name      string    `json:"name"`
 }
 
 type CreateFillupRequest struct {
-	VehicleID       string       `form:"vehicleId" json:"vehicleId" binding:"required"`
+	VehicleID       uuid.UUID    `form:"vehicleId" gorm:"type:uuid" json:"vehicleId" binding:"required"`
 	FuelUnit        *db.FuelUnit `form:"fuelUnit" json:"fuelUnit" binding:"required"`
 	FuelQuantity    float32      `form:"fuelQuantity" json:"fuelQuantity" binding:"required"`
 	PerUnitPrice    float32      `form:"perUnitPrice" json:"perUnitPrice" binding:"required"`
@@ -50,7 +54,7 @@ type CreateFillupRequest struct {
 	HasMissedFillup *bool        `form:"hasMissedFillup" json:"HasMissedFillup"`
 	Comments        string       `form:"comments" json:"comments" `
 	FillingStation  string       `form:"fillingStation" json:"fillingStation"`
-	UserID          string       `form:"userId" json:"userId" binding:"required"`
+	UserID          uuid.UUID    `form:"userId" gorm:"type:uuid" json:"userId" binding:"required"`
 	Date            time.Time    `form:"date" json:"date" binding:"required" time_format:"2006-01-02"`
 	FuelSubType     string       `form:"fuelSubType" json:"fuelSubType"`
 }
@@ -64,14 +68,14 @@ type UpdateExpenseRequest struct {
 }
 
 type CreateExpenseRequest struct {
-	VehicleID string `form:"vehicleId" json:"vehicleId" binding:"required"`
+	VehicleID uuid.UUID `form:"vehicleId" gorm:"type:uuid" json:"vehicleId" binding:"required"`
 
 	Amount     float32 `form:"amount" json:"amount"`
 	OdoReading int     `form:"odoReading" json:"odoReading"`
 
 	Comments    string    `form:"comments" json:"comments" `
 	ExpenseType string    `form:"expenseType" json:"expenseType"`
-	UserID      string    `form:"userId" json:"userId" binding:"required"`
+	UserID      uuid.UUID `form:"userId" gorm:"type:uuid" json:"userId" binding:"required"`
 	Date        time.Time `form:"date" json:"date" binding:"required" time_format:"2006-01-02"`
 }
 

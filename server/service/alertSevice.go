@@ -7,9 +7,11 @@ import (
 
 	"hammond/db"
 	"hammond/models"
+
+	"github.com/google/uuid"
 )
 
-func CreateAlert(model models.CreateAlertModel, vehicleId, userId string) (*db.VehicleAlert, error) {
+func CreateAlert(model models.CreateAlertModel, vehicleId, userId uuid.UUID) (*db.VehicleAlert, error) {
 	alert := db.VehicleAlert{
 		VehicleID:       vehicleId,
 		UserID:          userId,
@@ -39,7 +41,7 @@ func CreateAlert(model models.CreateAlertModel, vehicleId, userId string) (*db.V
 	return &alert, nil
 }
 
-func CreateAlertInstance(alertId string) error {
+func CreateAlertInstance(alertId uuid.UUID) error {
 	alert, err := db.GeAlertById(alertId)
 	if err != nil {
 		return err
@@ -58,13 +60,13 @@ func CreateAlertInstance(alertId string) error {
 			return errors.New("only single occurance is possible for this kind of alert")
 		}
 	}
-	users := []string{alert.UserID}
+	users := []uuid.UUID{alert.UserID}
 	if alert.AlertAllUsers {
 		allUsers, err := db.GetVehicleUsers(alert.VehicleID)
 		if err != nil {
 			return err
 		}
-		users = make([]string, len(*allUsers))
+		users = make([]uuid.UUID, len(*allUsers))
 		for i, user := range *allUsers {
 			users[i] = user.UserID
 		}

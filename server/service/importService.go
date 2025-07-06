@@ -5,6 +5,8 @@ import (
 
 	"hammond/db"
 	"hammond/models"
+
+	"github.com/google/uuid"
 )
 
 func WriteToDB(fillups []db.Fillup, expenses []db.Expense) []string {
@@ -41,7 +43,7 @@ func WriteToDB(fillups []db.Fillup, expenses []db.Expense) []string {
 
 }
 
-func DrivvoImport(content []byte, userId string, vehicleId string, importLocation bool) []string {
+func DrivvoImport(content []byte, userId uuid.UUID, vehicleId uuid.UUID, importLocation bool) []string {
 	var errors []string
 	user, err := GetUserById(userId)
 	if err != nil {
@@ -98,7 +100,7 @@ func DrivvoImport(content []byte, userId string, vehicleId string, importLocatio
 	return WriteToDB(fillups, allExpenses)
 }
 
-func FuellyImport(content []byte, userId string) []string {
+func FuellyImport(content []byte, userId uuid.UUID) []string {
 	fillups, expenses, errors := FuellyParseAll(content, userId)
 	if len(errors) != 0 {
 		return errors
@@ -107,7 +109,7 @@ func FuellyImport(content []byte, userId string) []string {
 	return WriteToDB(fillups, expenses)
 }
 
-func GenericImport(content models.ImportData, userId string) []string {
+func GenericImport(content models.ImportData, userId uuid.UUID) []string {
 	var errors []string
 	user, err := GetUserById(userId)
 	if err != nil {

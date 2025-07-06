@@ -54,7 +54,11 @@ func udpateSettings(c *gin.Context) {
 func udpateMySettings(c *gin.Context) {
 	var model models.UpdateSettingModel
 	if err := c.ShouldBind(&model); err == nil {
-		err := service.UpdateUserSettings(c.MustGet("userId").(string), model.Currency, *model.DistanceUnit, model.DateFormat)
+		id, err := common.ToUUID(c.MustGet("userId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{})
+		}
+		err = service.UpdateUserSettings(id, model.Currency, *model.DistanceUnit, model.DateFormat)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("udpateMySettings", err))
 			return

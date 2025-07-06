@@ -9,10 +9,11 @@ import (
 
 	"hammond/db"
 
+	"github.com/google/uuid"
 	"github.com/leekchan/accounting"
 )
 
-func FuellyParseAll(content []byte, userId string) ([]db.Fillup, []db.Expense, []string) {
+func FuellyParseAll(content []byte, userId uuid.UUID) ([]db.Fillup, []db.Expense, []string) {
 	stream := bytes.NewReader(content)
 	reader := csv.NewReader(stream)
 	var errors []string

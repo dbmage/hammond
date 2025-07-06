@@ -16,7 +16,7 @@ func RegisterReportsController(router *gin.RouterGroup) {
 
 func getMileageForVehicle(c *gin.Context) {
 
-	var searchByIdQuery models.SearchByIdQuery
+	var searchByIdQuery models.SearchByIDQuery
 
 	if err := c.ShouldBindUri(&searchByIdQuery); err == nil {
 		var model models.MileageQueryModel
@@ -25,8 +25,12 @@ func getMileageForVehicle(c *gin.Context) {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getMileageForVehicle", err))
 			return
 		}
-
-		fillups, err := service.GetMileageByVehicleId(searchByIdQuery.Id, model.Since, model.MileageOption)
+		id, err := common.ToUUID(searchByIdQuery.ID)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, common.NewError("getMileageForVehicle", err))
+			return
+		}
+		fillups, err := service.GetMileageByVehicleId(id, model.Since, model.MileageOption)
 		if err != nil {
 			c.JSON(http.StatusUnprocessableEntity, common.NewError("getMileageForVehicle", err))
 			return

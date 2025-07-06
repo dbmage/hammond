@@ -20,7 +20,7 @@ func main() {
 	var err error
 	db.DB, err = db.Init()
 	if err != nil {
-		log.Fatal("unable to initialise the database", err)
+		log.Fatal("unable to initialise the database: ", err)
 	}
 
 	db.Migrate()
@@ -31,7 +31,6 @@ func main() {
 	r.Use(location.Default())
 	r.Use(static.Serve("/", static.LocalFile("./dist", true)))
 	r.NoRoute(func(c *gin.Context) {
-		//fmt.'Println(c.Request.URL.Path)
 		c.File("dist/index.html")
 	})
 	router := r.Group("/api")

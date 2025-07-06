@@ -5,11 +5,13 @@ import (
 	"os"
 	"strings"
 
+	"hammond/common"
 	"hammond/db"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // Strips 'BEARER ' prefix from token string
@@ -36,13 +38,10 @@ var MyAuth2Extractor = &request.MultiExtractor{
 }
 
 // A helper to write user_id and user_model to the context
-func UpdateContextUserModel(c *gin.Context, my_user_id string) {
+func UpdateContextUserModel(c *gin.Context, my_user_id uuid.UUID) {
 	var myUserModel db.User
-	if my_user_id != "" {
-
-		db.DB.First(&myUserModel, map[string]string{
-			"ID": my_user_id,
-		})
+	if my_user_id != uuid.Nil {
+		db.DB.First(&myUserModel, "id = ?", my_user_id)
 	}
 	c.Set("userId", my_user_id)
 	c.Set("userModel", myUserModel)
@@ -53,7 +52,7 @@ func UpdateContextUserModel(c *gin.Context, my_user_id string) {
 //	r.Use(AuthMiddleware(true))
 func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		UpdateContextUserModel(c, "")
+		UpdateContextUserModel(c, uuid.UUID{})
 		token, err := request.ParseFromRequest(c.Request, MyAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
 			b := ([]byte(os.Getenv("JWT_SECRET")))
 			return b, nil
@@ -65,9 +64,11 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 			return
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			my_user_id := claims["id"].(string)
-			//fmt.Println(my_user_id,claims["id"])
-			UpdateContextUserModel(c, my_user_id)
+			id, err := common.ToUUID(claims["id"])
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{})
+			}
+			UpdateContextUserModel(c, id)
 		}
 	}
 }
