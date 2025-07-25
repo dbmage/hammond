@@ -18,6 +18,9 @@ module.exports = {
     // Only enable performance hints for production builds,
     // outside of tests.
     config.performance.hints(process.env.NODE_ENV === 'production' && !process.env.VUE_APP_TEST && 'warning')
+
+    // Do not force root as "/" as this is bad practice. Default to it but allow setting via ENV VARS
+    config.output.set('publicPath', process.env.APP_BASE || '/')
   },
   css: {
     // Enable CSS source maps.
